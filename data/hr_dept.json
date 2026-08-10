@@ -1,0 +1,82 @@
+[
+  {
+    "EmpId": 102,
+    "Employee Name": "Rahul Menon",
+    "Dept": "IT",
+    "Work Location": "Trivandrum",
+    "Email": "rahul.menon@gmail.com",
+    "Mobile": "9845012345"
+  },
+  {
+    "EmpId": 141,
+    "Employee Name": "Samson Tharakan",
+    "Dept": "DTS",
+    "Work Location": "Trivandrum",
+    "Email": "sam@gmail.com",
+    "Mobile": "96543425454"
+  },
+  {
+    "EmpId": 156,
+    "Employee Name": "Priya Nair",
+    "Dept": "HR",
+    "Work Location": "Kochi",
+    "Email": "priya.nair@gmail.com",
+    "Mobile": "9847123456"
+  },
+  {
+    "EmpId": 219,
+    "Employee Name": "Arjun Pillai",
+    "Dept": "Finance",
+    "Work Location": "Trivandrum",
+    "Email": "arjun.pillai@gmail.com",
+    "Mobile": "9946234567"
+  },
+  {
+    "EmpId": 267,
+    "Employee Name": "Sneha Varma",
+    "Dept": "DTS",
+    "Work Location": "Chennai",
+    "Email": "sneha.varma@gmail.com",
+    "Mobile": "9884345678"
+  },
+  {
+    "EmpId": 305,
+    "Employee Name": "Vishnu Kumar",
+    "Dept": "IT",
+    "Work Location": "Kochi",
+    "Email": "vishnu.kumar@gmail.com",
+    "Mobile": "9963456789"
+  },
+  {
+    "EmpId": 358,
+    "Employee Name": "Meera Krishnan",
+    "Dept": "Marketing",
+    "Work Location": "Chennai",
+    "Email": "meera.krishnan@gmail.com",
+    "Mobile": "9845567890"
+  },
+  {
+    "EmpId": 384,
+    "Employee Name": "Aryan Nandagopal",
+    "Dept": "DTS",
+    "Work Location": "Trivandrum",
+    "Email": "anandnandagopal@gmail.com",
+    "Mobile": "96543425454"
+  },
+  {
+    "EmpId": 412,
+    "Employee Name": "Deepak Iyer",
+    "Dept": "Operations",
+    "Work Location": "Kochi",
+    "Email": "deepak.iyer@gmail.com",
+    "Mobile": "9847678901"
+  },
+  {
+    "EmpId": 470,
+    "Employee Name": "Lakshmi Pillai",
+    "Dept": "Finance",
+    "Work Location": "Trivandrum",
+    "Email": "lakshmi.pillai@gmail.com",
+    "Mobile": "9946789012"
+  }
+]

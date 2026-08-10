@@ -1,0 +1,12 @@
+[
+  { "EmpId": 102, "CTC": 550000, "Total Allowance": 12000 },
+  { "EmpId": 141, "CTC": 1000000, "Total Allowance": 20000 },
+  { "EmpId": 156, "CTC": 480000, "Total Allowance": 10000 },
+  { "EmpId": 219, "CTC": 950000, "Total Allowance": 32000 },
+  { "EmpId": 267, "CTC": 1150000, "Total Allowance": 42000 },
+  { "EmpId": 305, "CTC": 1900000, "Total Allowance": 65000 },
+  { "EmpId": 358, "CTC": 1350000, "Total Allowance": 47000 },
+  { "EmpId": 384, "CTC": 1400000, "Total Allowance": 50000 },
+  { "EmpId": 412, "CTC": 2200000, "Total Allowance": 75000 },
+  { "EmpId": 470, "CTC": 2600000, "Total Allowance": 90000 }
+]
