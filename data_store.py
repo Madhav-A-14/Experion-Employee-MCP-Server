@@ -19,9 +19,10 @@ class Experion_DataStore:
         
         """EmpId + Employee Name only, for every employee -> From HR_Dept.json"""
         employees = self._load(self.hr_file)
-        for e in employees:
-            return[
+        
+        return[
                 {"EmpId" : e["EmpId"], "Employee Name" : e["Employee Name"]}
+                for e in employees
             ]
             
     def get_employee_data(self, emp_id:int) -> dict[str,Any]:
@@ -31,7 +32,7 @@ class Experion_DataStore:
         for e in employees:
             if e["EmpId"] == emp_id:
                 return e 
-            return {"error": f"No employee found with EmpId {emp_id}"}
+        return {"error": f"No employee found with EmpId {emp_id}"}
         
         
     def get_salary_breakup(self, emp_id:int) -> dict[str,Any]:
@@ -46,6 +47,6 @@ class Experion_DataStore:
                     "CTC" : r["CTC"],
                     "Total Allowance" : r["Total Allowance"],
                 }
-            return {"error": f"No salary data found with EmpId {emp_id}"}
+        return {"error": f"No salary data found with EmpId {emp_id}"}
         
     
