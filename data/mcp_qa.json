@@ -1,0 +1,14 @@
+[
+  {
+    "query": "Get employee id and name of employee whose id is 156",
+    "expected_tool": "get_employee_data"
+  },
+  {
+    "query": "What is employee 102's CTC and total allowance?",
+    "expected_tool": "get_salary_breakup"
+  },
+  {
+    "query": "List all employees with their id and name",
+    "expected_tool": "get_all_employees"
+  }
+]

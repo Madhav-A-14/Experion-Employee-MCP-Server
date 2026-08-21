@@ -8,5 +8,15 @@
   { "EmpId": 358, "CTC": 1350000, "Total Allowance": 47000 },
   { "EmpId": 384, "CTC": 1400000, "Total Allowance": 50000 },
   { "EmpId": 412, "CTC": 2200000, "Total Allowance": 75000 },
-  { "EmpId": 470, "CTC": 2600000, "Total Allowance": 90000 }
+  { "EmpId": 470, "CTC": 2600000, "Total Allowance": 90000 },
+  { "EmpId": 128, "CTC": 520000, "Total Allowance": 11000 },
+  { "EmpId": 175, "CTC": 620000, "Total Allowance": 15000 },
+  { "EmpId": 203, "CTC": 880000, "Total Allowance": 28000 },
+  { "EmpId": 244, "CTC": 1050000, "Total Allowance": 36000 },
+  { "EmpId": 289, "CTC": 1250000, "Total Allowance": 44000 },
+  { "EmpId": 321, "CTC": 1500000, "Total Allowance": 52000 },
+  { "EmpId": 366, "CTC": 1700000, "Total Allowance": 58000 },
+  { "EmpId": 398, "CTC": 2000000, "Total Allowance": 68000 },
+  { "EmpId": 429, "CTC": 2350000, "Total Allowance": 80000 },
+  { "EmpId": 455, "CTC": 2750000, "Total Allowance": 95000 }
 ]
