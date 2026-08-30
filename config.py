@@ -11,7 +11,8 @@ BASE_DIR = Path(__file__).parent
 
 HR_DEPT_FILE = BASE_DIR/"data"/"hr_dept.json"
 FINANCE_DEPT_FILE = BASE_DIR/"data"/"finance_dept.json"
-QA_FILE = BASE_DIR/"data"/"mcp_qa.json"
+QA_FILE = BASE_DIR/"data"/"mcp_goldens.json"
 
 SERVER_NAME = "Experion Employee MCP"
+MODEL_NAME = "gpt-5-nano"
 
