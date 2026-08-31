@@ -10,5 +10,9 @@
   {
     "query": "List all employees with their id and name",
     "expected_tool": "get_all_employees"
+  },
+  {
+    "query":"I want to list out names of employees who gets maximum salary in DTS",
+    "expected_tool":"{get_all_employees, get_employee_data}"
   }
 ]

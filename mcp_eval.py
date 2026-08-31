@@ -53,7 +53,7 @@ def run_agent(user_query:str):
     
     """
     
-    # Step-1 : Sends the model the user query along with the list of tools available.Recieves back the
+    # Step-1 : Sends the model, the user query along with the list of tools available.Recieves back the
     # models response as well as which tool to use.
     response = client.chat.completions.create(
         model= MODEL_NAME,
@@ -160,17 +160,17 @@ if __name__ == "__main__":
     results = evaluate(test_cases=test_cases, metrics=[MCPUseMetric()])
     
     
-    print("\n" + "=" * 80)
-    print("Detailed reasoning per test case:")
-    print("=" * 80)
+    # print("\n" + "=" * 80)
+    # print("Detailed reasoning per test case:")
+    # print("=" * 80)
 
-    for i, test_result in enumerate(results.test_results):
-        print(f"\nTest case {i}: {test_result.input}")
-        for metric_data in test_result.metrics_data:
-            print(f"  Metric: {metric_data.name}")
-            print(f"  Score: {metric_data.score}")
-            print(f"  Reason: {metric_data.reason}")
+    # for i, test_result in enumerate(results.test_results):
+    #     print(f"\nTest case {i}: {test_result.input}")
+    #     for metric_data in test_result.metrics_data:
+    #         print(f"  Metric: {metric_data.name}")
+    #         print(f"  Score: {metric_data.score}")
+    #         print(f"  Reason: {metric_data.reason}")
     
-        
+         
         
     
