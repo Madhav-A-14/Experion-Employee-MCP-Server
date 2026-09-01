@@ -1,18 +1,41 @@
 [
   {
-    "query": "Get employee id and name of employee whose id is 156",
-    "expected_tool": "get_employee_data"
+    "query": "List all employees with their id and name",
+    "expected_tools": ["get_all_employees"]
   },
+
+  {
+    "query": "Get employee id and name of employee whose id is 156",
+    "expected_tools": ["get_employee_data"]
+  },
+
   {
     "query": "What is employee 102's CTC and total allowance?",
-    "expected_tool": "get_salary_breakup"
+    "expected_tools": ["get_salary_breakup"]
   },
+
   {
-    "query": "List all employees with their id and name",
-    "expected_tool": "get_all_employees"
+  "query": "List the names of all employees based in Kochi",
+  "expected_tools": ["get_all_employees", "get_employee_data"]
   },
+
   {
-    "query":"I want to list out names of employees who gets maximum salary in DTS",
-    "expected_tool":"{get_all_employees, get_employee_data}"
+    "query": "List out the names and ids of all employees, then show me the full profile details of employee 267",
+    "expected_tools": ["get_all_employees", "get_employee_data"]
+  },
+
+  {
+    "query": "Get employee 244's profile details along with their complete salary breakup",
+    "expected_tools": ["get_employee_data", "get_salary_breakup"]
+  },
+
+  {
+    "query": "I want to list out names of employees who gets maximum salary in DTS",
+    "expected_tools": ["get_all_employees", "get_employee_data", "get_salary_breakup"]
+  },
+  
+  {
+    "query": "Show me the salary breakup of every employee currently in the company",
+    "expected_tools": ["get_all_employees", "get_salary_breakup"]
   }
 ]
