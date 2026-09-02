@@ -1,8 +1,15 @@
 """
 Evaluates whether an LLM correctly chooses and calls Experion MCP Tools 
 in response to natural language queries using DeepEval's MCPUseMetric.
+Added two custom checks:
+    1) Whether right set of tools was used -- checks whether any extra tool was called --
+        also whether any tool call is missed.
+    2) The order in which the tools are being called when query needs more than one tool.
+    
+Supports mutli-step queries wherein the next tool call depends on the response of earlier tool's result.
 
 Queries are loaded from data/mcp_qa.json.
+
 """
 import asyncio
 import json
@@ -12,15 +19,17 @@ load_dotenv()
 from openai import OpenAI
 from config import QA_FILE,MODEL_NAME
 from server import mcp,datastore # uses the already built MCP + Datafiles from server.py
-from deepeval.test_case import LLMTestCase
+from deepeval.test_case import LLMTestCase,ToolCall
 from deepeval.test_case.mcp import MCPToolCall
-from deepeval.metrics import MCPUseMetric
+from deepeval.metrics import MCPUseMetric, ToolCorrectnessMetric
+from deepeval.evaluate import DisplayConfig
 from deepeval import evaluate
 from mcp.types import CallToolResult, TextContent
 
 # Setting Open Ai Key from .env
 client = OpenAI()
 
+MAX_TURNS = 6
 
 def build_tools(mcp_server):
     """
@@ -44,84 +53,95 @@ def build_tools(mcp_server):
 tools = build_tools(mcp)
 
 
+def execute_tools(name:str,args:dict):
+    """
+    Runs the real datastore function matching the tool name the model chose.
+    
+    """
+    
+    if name == "get_all_employees":
+        return datastore.get_all_employees()
+    elif name == "get_employee_data":
+        return datastore.get_employee_data(**args)
+    elif name == "get_salary_breakup":
+        return datastore.get_salary_breakup(**args)
+    else:
+       return {"error": f"Unknown tool {name}"} 
+    
+    
+    
+
 def run_agent(user_query:str):
     """
-    Sends user query along with the available tools to the LLM, model decides the appropriate tool 
-    and arguments to pass. The code then runs that real function(using data_store.py) and the result is
-    then stored in MCPUsageMetric format.A second call is made with LLM, wherein the real tool result
-    is passed back so the model can turn it into a natural, readable answer instead of raw JSON. 
+    Sends user query along with the available tools to the LLM. Instead of a single
+    ask-then-answer pass, this now loops : the model decides which tool to call, the
+    code runs that real function (using data_store.py) and sends the real result
+    back to the model, which based on the previous tool call decides whether it needs 
+    another tool or that it has enough to give a natural, readable final answer instead 
+    of raw JSON. This repeats until the model stops asking for tools, or MAX_TURNS is reached.
     
     """
     
-    # Step-1 : Sends the model, the user query along with the list of tools available.Recieves back the
-    # models response as well as which tool to use.
-    response = client.chat.completions.create(
-        model= MODEL_NAME,
-        tools = tools,
-        messages=[{"role":"user","content":user_query}],  
-    )
-    message = response.choices[0].message
+    messages=[{"role":"user","content":user_query}]
     tool_calls = []
-    results_by_id = {}
+    called_tool_names = []
+    final_text = None
     
-    # Step-2 : The model decides which tool to use (from tool_call) and what all arguments to pass.
-    # the code then runs the real function (inside data_store.py) and the result is recorded in 
-    # format MCPUsageMetric expects. 
-    
-    for call in (message.tool_calls or []):
-        args = json.loads(call.function.arguments)
-    
-        if call.function.name == "get_all_employees":
-            raw_result = datastore.get_all_employees()
-        elif call.function.name == "get_employee_data":
-            raw_result = datastore.get_employee_data(**args)
-        elif call.function.name == "get_salary_breakup":
-            raw_result = datastore.get_salary_breakup(**args)
-        else:
-            raw_result = {"error": f"Unknown tool {call.function.name}"}
-            
-        # DeepEva; framework expects the result ie the MCPToolCall.result to be in json object format
-        # and not in dict format. So converting the plain dict to json format -- what deepeval expects
+    for _ in range(MAX_TURNS):
         
-        mcp_result = CallToolResult(
-            content=[TextContent(type="text", text=json.dumps(raw_result))]
-        )
-    
-        # Saving the result in format MCPUsgaeMetric expects.   
-        tool_calls.append(
-            MCPToolCall(
-                name = call.function.name,
-                args = args,
-                result = mcp_result
+        response = client.chat.completions.create(
+                model= MODEL_NAME,
+                tools = tools,
+                messages=messages
             )
-        )
-        results_by_id[call.id] = raw_result
-    
+        message = response.choices[0].message
+        messages.append(message)
         
-    # Step-3 : The result is then sent to the LLM once again, so that the LLM can turn that result into
-    # actual readable format rather than printing it in JSON format.
+        if not message.tool_calls:
+            # Model answers with all the collected results,with no tools needed -- final answer
+            final_text = message.content
+            break
+
     
-    if tool_calls:
-        final_result =client.chat.completions.create(
-        model= MODEL_NAME,
-        messages=[{"role":"user","content":user_query},
-        message,
-                    *[
-                    {
-                        "role": "tool",
-                        "tool_call_id": tc.id,
-                        "content": json.dumps(results_by_id[tc.id]),
-                    }
-                    for tc in message.tool_calls
-                ],
-            ],
-        )
-        final_text = final_result.choices[0].message.content
+        for call in (message.tool_calls or []):
+            args = json.loads(call.function.arguments)
+            raw_result = execute_tools(call.function.name,args)
+        
+            
+            
+            # DeepEval framework expects the result ie the MCPToolCall.result to be in json object format
+            # and not in dict format. So converting the plain dict to json format -- what deepeval expects
+        
+            mcp_result = CallToolResult(
+                content=[TextContent(type="text", text=json.dumps(raw_result))]
+            )
+       
+            tool_calls.append(
+                MCPToolCall(
+                    name = call.function.name,
+                    args = args,
+                    result = mcp_result
+                )
+            )
+            called_tool_names.append(call.function.name)
+            
+            #Feeds the real result back into the conversation, so the model can decide its next move 
+            # based on real data.
+            messages.append({
+                "role": "tool",
+                "tool_call_id": call.id,
+                "content": json.dumps(raw_result),
+            })
+        
     else:
-        # Model answered directly without needing a tool
-        final_text = message.content
+            
+        final_text = "Max turns reached without final answer"
         
-    return final_text, tool_calls
+        #Returns the final answer text, the detailed DeepEval-ready tool call records, 
+        # and the plain ordered name list.
+    return final_text,tool_calls,called_tool_names
+    
+   
 
 def load_goldens():
     """
@@ -142,34 +162,46 @@ if __name__ == "__main__":
     
     for golden in goldens:
         query = golden["query"]
+        expected_tools = golden.get("expected_tools", [])
         print(f"Evaluation in progress ......... ")
         
-        actual_output, tools_called = run_agent(query)
+        actual_output,tools_called,called_tool_names = run_agent(query)
 
         test_cases.append(
             LLMTestCase(
                 input=query,
                 actual_output=actual_output,
-                mcp_servers=[mcp],       # our real MCP server, passed in directly
+                mcp_servers=[mcp],
                 mcp_tools_called=tools_called,
+                tools_called=[ToolCall(name=n) for n in called_tool_names], 
+                expected_tools=[ToolCall(name=t) for t in expected_tools], 
             )
         )
         
-    #Handing everything over to DeepEval's MCPUsageMetric which will evaluate and judges whether
-    #right tool along with its arguments have been called for each user question.
-    results = evaluate(test_cases=test_cases, metrics=[MCPUseMetric()])
+        
+        
+    # Three metrics, each answering a different question:
+    #   - MCPUseMetric: checks query, whether all tools are called, their arguments, how the collected
+    #                    results are used by LLM in final answer generation.
+     
+    #   - ToolCorrectnessMetric (exact match): were exactly the right tools used —
+    #                                          checks for any tools being missed to call and for any
+    #                                          tools that has been called but not needed.
+    
+    #   - ToolCorrectnessMetric (ordering): were the tools called in the right sequence?
+        
+    
+    results = evaluate(
+        test_cases=test_cases,
+        metrics=[
+            MCPUseMetric(),
+            ToolCorrectnessMetric(should_exact_match=True,include_reason=True),
+            ToolCorrectnessMetric(should_consider_ordering=True,include_reason=True),
+        ],
+    )
     
     
-    # print("\n" + "=" * 80)
-    # print("Detailed reasoning per test case:")
-    # print("=" * 80)
-
-    # for i, test_result in enumerate(results.test_results):
-    #     print(f"\nTest case {i}: {test_result.input}")
-    #     for metric_data in test_result.metrics_data:
-    #         print(f"  Metric: {metric_data.name}")
-    #         print(f"  Score: {metric_data.score}")
-    #         print(f"  Reason: {metric_data.reason}")
+    
     
          
         
