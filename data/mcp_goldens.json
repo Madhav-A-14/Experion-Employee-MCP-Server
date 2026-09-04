@@ -1,41 +1,49 @@
 [
   {
     "query": "List all employees with their id and name",
-    "expected_tools": ["get_all_employees"]
+    "expected_tools": ["get_all_employees"],
+    "expected_output": "Here are all employees with their ID and name: 102 - Rahul Menon, 141 - Samson Tharakan, 156 - Priya Nair, 219 - Arjun Pillai, 267 - Sneha Varma, 305 - Vishnu Kumar, 358 - Meera Krishnan, 384 - Aryan Nandagopal, 412 - Deepak Iyer, 470 - Lakshmi Pillai, 128 - Anjali Suresh, 175 - Karthik Raman, 203 - Divya Chandran, 244 - Nikhil Warrier, 289 - Sreelakshmi Nair, 321 - Manoj Pillai, 366 - Athira Menon, 398 - Rohit Nambiar, 429 - Gayathri Unni, 455 - Vivek Krishnan."
   },
 
   {
     "query": "Get employee id and name of employee whose id is 156",
-    "expected_tools": ["get_employee_data"]
+    "expected_tools": ["get_employee_data"],
+    "expected_output": "Employee 156 is Priya Nair."
   },
 
   {
     "query": "What is employee 102's CTC and total allowance?",
-    "expected_tools": ["get_salary_breakup"]
+    "expected_tools": ["get_salary_breakup"],
+    "expected_output": "Employee 102 has a CTC of 550000 and a total allowance of 12000."
   },
 
   {
   "query": "List the names of all employees based in Kochi",
-  "expected_tools": ["get_all_employees", "get_employee_data"]
+  "expected_tools": ["get_all_employees", "get_employee_data"],
+  "expected_output": "The employees based in Kochi are Priya Nair, Vishnu Kumar, Deepak Iyer, Anjali Suresh, Sreelakshmi Nair, and Rohit Nambiar."
   },
 
   {
     "query": "List out the names and ids of all employees, then show me the full profile details of employee 267",
-    "expected_tools": ["get_all_employees", "get_employee_data"]
+    "expected_tools": ["get_all_employees", "get_employee_data"],
+    "expected_output": "All employees are: 102 - Rahul Menon, 141 - Samson Tharakan, 156 - Priya Nair, 219 - Arjun Pillai, 267 - Sneha Varma, 305 - Vishnu Kumar, 358 - Meera Krishnan, 384 - Aryan Nandagopal, 412 - Deepak Iyer, 470 - Lakshmi Pillai, 128 - Anjali Suresh, 175 - Karthik Raman, 203 - Divya Chandran, 244 - Nikhil Warrier, 289 - Sreelakshmi Nair, 321 - Manoj Pillai, 366 - Athira Menon, 398 - Rohit Nambiar, 429 - Gayathri Unni, 455 - Vivek Krishnan. Employee 267's full profile: Sneha Varma, Dept DTS, Work Location Chennai, Email sneha.varma@gmail.com, Mobile 9884345678."
   },
 
   {
     "query": "Get employee 244's profile details along with their complete salary breakup",
-    "expected_tools": ["get_employee_data", "get_salary_breakup"]
+    "expected_tools": ["get_employee_data", "get_salary_breakup"],
+    "expected_output": "Employee 244 is Nikhil Warrier, Dept DTS, Work Location Trivandrum, Email nikhil.warrier@gmail.com, Mobile 9946567890. Their salary breakup is a CTC of 1050000 and a total allowance of 36000."
   },
 
   {
     "query": "I want to list out names of employees who gets maximum salary in DTS",
-    "expected_tools": ["get_all_employees", "get_employee_data", "get_salary_breakup"]
+    "expected_tools": ["get_all_employees", "get_employee_data", "get_salary_breakup"],
+    "expected_output": "The employee with the maximum salary in DTS is Gayathri Unni, with a CTC of 2350000."
   },
   
   {
-    "query": "Show me the salary breakup of every employee currently in the company",
-    "expected_tools": ["get_all_employees", "get_salary_breakup"]
-  }
+    "query": "Find the employee with the highest CTC and give me their full profile along with salary breakup",
+    "expected_tools": ["get_all_employees", "get_salary_breakup", "get_employee_data"],
+    "expected_output": "The employee with the highest CTC is Vivek Krishnan (ID 455), with a CTC of 2750000 and total allowance of 95000. Their full profile: Dept Finance, Work Location Trivandrum, Email vivek.krishnan@gmail.com, Mobile 9847123458."
+  }   
 ]

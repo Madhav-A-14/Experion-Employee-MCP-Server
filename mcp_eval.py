@@ -25,6 +25,8 @@ from deepeval.metrics import MCPUseMetric, ToolCorrectnessMetric
 from deepeval.evaluate import DisplayConfig
 from deepeval import evaluate
 from mcp.types import CallToolResult, TextContent
+from cosine_metric import CosineSimilarityMetric
+from report import export_mcp_report
 
 # Setting Open Ai Key from .env
 client = OpenAI()
@@ -150,7 +152,34 @@ def load_goldens():
     """
     with open(QA_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
-    
+
+
+def build_report_data(results, metric_labels):
+    """
+    Turns DeepEval's final results in CLI to a .csv file for easier review,
+    sharing, and comparison across test runs -- since the terminal output
+    disappears once the console clears. 
+    """
+    report_results = {label: [] for label in metric_labels}
+    for test_result in results.test_results:
+        for label, metric_data in zip(metric_labels, test_result.metrics_data):
+            report_results[label].append(metric_data.score)
+
+    total_tests  = len(results.test_results)
+    passed_tests = sum(1 for tr in results.test_results if tr.success)
+    failed_tests = total_tests - passed_tests
+    pass_rate    = (passed_tests / total_tests * 100) if total_tests else 0
+
+    overall_stats = {
+        "total":     total_tests,
+        "passed":    passed_tests,
+        "failed":    failed_tests,
+        "pass_rate": round(pass_rate, 1),
+    }
+
+    return report_results, overall_stats   
+
+
 
 if __name__ == "__main__":
     goldens = load_goldens()
@@ -163,6 +192,7 @@ if __name__ == "__main__":
     for golden in goldens:
         query = golden["query"]
         expected_tools = golden.get("expected_tools", [])
+        expected_output = golden.get("expected_output",[])
         print(f"Evaluation in progress ......... ")
         
         actual_output,tools_called,called_tool_names = run_agent(query)
@@ -171,10 +201,12 @@ if __name__ == "__main__":
             LLMTestCase(
                 input=query,
                 actual_output=actual_output,
+                expected_output=expected_output,
                 mcp_servers=[mcp],
                 mcp_tools_called=tools_called,
                 tools_called=[ToolCall(name=n) for n in called_tool_names], 
                 expected_tools=[ToolCall(name=t) for t in expected_tools], 
+                
             )
         )
         
@@ -189,17 +221,25 @@ if __name__ == "__main__":
     #                                          tools that has been called but not needed.
     
     #   - ToolCorrectnessMetric (ordering): were the tools called in the right sequence?
+    
+    
+    metrics_list = [
+        MCPUseMetric(),
+        ToolCorrectnessMetric(should_exact_match=True,include_reason=True,threshold=1.0),
+        ToolCorrectnessMetric(should_consider_ordering=True,include_reason=True,threshold=1.0),
+        CosineSimilarityMetric(threshold=0.75),
+    ]
         
     
     results = evaluate(
         test_cases=test_cases,
-        metrics=[
-            MCPUseMetric(),
-            ToolCorrectnessMetric(should_exact_match=True,include_reason=True),
-            ToolCorrectnessMetric(should_consider_ordering=True,include_reason=True),
-        ],
-    )
+        metrics = metrics_list,
     
+    )
+    metric_labels = ["MCP_Use", "Tool_Correctness(Tool-Exact-Match)", "Tool_Correctness(Tool-Ordering)", "Cosine_Similarity"]
+    thresholds = {label: metric.threshold for label, metric in zip(metric_labels, metrics_list)}
+    report_results, overall_stats = build_report_data(results, metric_labels)
+    export_mcp_report(test_cases, report_results, overall_stats=overall_stats, thresholds=thresholds)
     
     
     

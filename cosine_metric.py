@@ -11,9 +11,9 @@ from deepeval.test_case import LLMTestCase
 from openai import OpenAI
 
 
-client = OpenAI
+client = OpenAI()
 
-class cosineSimilarityMetric(BaseMetric):
+class CosineSimilarityMetric(BaseMetric):
     
     def __init__(self,threshold:float = 0.75, model_name:str ="text-embedding-3-small" ):
         
@@ -37,7 +37,7 @@ class cosineSimilarityMetric(BaseMetric):
         return np.array(response.data[0].embedding)
     
         
-    def measure(self,test_case : LLMTestCase) -> float:
+    def measure(self,test_case : LLMTestCase, *args, **kwargs) -> float:
             
         """
         This is the main method DeepEval calls for every test case.
@@ -69,11 +69,18 @@ class cosineSimilarityMetric(BaseMetric):
         
         return self.score
     
-    async def a_measure(self, test_case:LLMTestCase) -> float:
+    async def a_measure(self, test_case:LLMTestCase, *args, **kwargs) -> float:
         return self.measure(test_case)
     
     
+    def is_successful(self) ->bool:
+        return self.success
     
+    @property
+    def __name__(self):
+        # The label DeepEval will show for this metric in the results/report.
+        
+        return "Output Similarity"
       
         
         
