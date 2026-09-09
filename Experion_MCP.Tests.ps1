@@ -20,7 +20,7 @@ Describe "Experion Employee MCP - Tool Tests"{
             $response = Invoke-MCPTool -ToolName "get_all_employees"
             $employees = $response.result.content[0].text | ConvertFrom-Json
 
-            $employees.Count | Should Be 10
+            $employees.Count | Should Be 20
             ($employees | Where-Object {$_.EmpId -eq 384}).'Employee Name' | Should Be "Aryan Nandagopal"
         }
     }

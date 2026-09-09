@@ -31,6 +31,8 @@ from report import export_mcp_report
 # Setting Open Ai Key from .env
 client = OpenAI()
 
+# Creates the OpenAI client, and sets a safety cap of 6 turns on the multi-step agent loop, 
+# so a confused model can't loop forever. 
 MAX_TURNS = 6
 
 def build_tools(mcp_server):
