@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from openai import OpenAI
-from config import QA_FILE,MODEL_NAME
+from config import QA_FILE,MODEL_NAME,RUN_REPORT
 from server import mcp,datastore # uses the already built MCP + Datafiles from server.py
 from deepeval.test_case import LLMTestCase,ToolCall
 from deepeval.test_case.mcp import MCPToolCall
@@ -238,10 +238,11 @@ if __name__ == "__main__":
         metrics = metrics_list,
     
     )
-    metric_labels = ["MCP_Use", "Tool_Correctness(Tool-Exact-Match)", "Tool_Correctness(Tool-Ordering)", "Cosine_Similarity"]
-    thresholds = {label: metric.threshold for label, metric in zip(metric_labels, metrics_list)}
-    report_results, overall_stats = build_report_data(results, metric_labels)
-    export_mcp_report(test_cases, report_results, overall_stats=overall_stats, thresholds=thresholds)
+    if RUN_REPORT:
+        metric_labels = ["MCP_Use", "Tool_Correctness(Tool-Exact-Match)", "Tool_Correctness(Tool-Ordering)", "Cosine_Similarity"]
+        thresholds = {label: metric.threshold for label, metric in zip(metric_labels, metrics_list)}
+        report_results, overall_stats = build_report_data(results, metric_labels)
+        export_mcp_report(test_cases, report_results, overall_stats=overall_stats, thresholds=thresholds)
     
     
     

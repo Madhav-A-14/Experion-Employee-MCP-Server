@@ -2,16 +2,31 @@
 Custom DeepEval metric that computes cosine similarity between 
 expected_output and actual_output using sentence embeddings.
 Connects into the same evaluate() pipeline as MCPUseMetric.
-    
+
+Uses Voyage AI's voyage-4-nano model, loaded locally via sentence-transformers.
 """
 
 import numpy as np
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
-from openai import OpenAI
+from sentence_transformers import SentenceTransformer
+from config import EMBEDDING_MODEL_NAME,EMBEDDING_TRUNCATE_DIM
 
 
-client = OpenAI()
+_model = None
+
+
+def _get_model():
+    
+    global _model
+    if _model is None:
+        _model = SentenceTransformer(
+            EMBEDDING_MODEL_NAME,
+            trust_remote_code=True,
+            
+        )
+    return _model
+    
 
 class CosineSimilarityMetric(BaseMetric):
     
@@ -27,14 +42,14 @@ class CosineSimilarityMetric(BaseMetric):
         
     def _get_embeddings(self, text:str) -> np.ndarray:
         """
-        Sends one piece of text to OpenAI and gets back its embedding —
-        a list of numbers representing the text's "meaning" as a vector.
-        Converted to a numpy array so we can do math on it easily.
+        Sends one piece of text through the local voyage-4-nano model and
+        gets back its embedding — a list of numbers representing the
+        text's "meaning" as a vector.
             
         """
-            
-        response = client.embeddings.create(input =[text], model=self.model_name)
-        return np.array(response.data[0].embedding)
+        model = _get_model() 
+        return model.encode(text, convert_to_numpy = True) 
+        
     
         
     def measure(self,test_case : LLMTestCase, *args, **kwargs) -> float:
@@ -60,8 +75,8 @@ class CosineSimilarityMetric(BaseMetric):
          #              ||A|| × ||B||
             
            
-        similarity = np.dot(expected_vectorized,actual_vectorized)/(
-            np.linalg.norm(expected_vectorized))*(np.linalg.norm(actual_vectorized))
+        similarity = np.dot(expected_vectorized,actual_vectorized) / (
+            np.linalg.norm(expected_vectorized))*np.linalg.norm(actual_vectorized)
             
         self.score = float(similarity) 
         self.success = self.score>= self.threshold 
