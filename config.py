@@ -22,4 +22,3 @@ RUN_REPORT = True
 #----------------------------------------------------------------------------------------------------------------#
 # Embedding model used by CosineSimilarityMetric
 EMBEDDING_MODEL_NAME = "voyageai/voyage-4-nano"
-EMBEDDING_TRUNCATE_DIM = 1024  # 2048/1024/512/256 — lower = faster, still strong quality

@@ -22,7 +22,6 @@ from server import mcp,datastore # uses the already built MCP + Datafiles from s
 from deepeval.test_case import LLMTestCase,ToolCall
 from deepeval.test_case.mcp import MCPToolCall
 from deepeval.metrics import MCPUseMetric, ToolCorrectnessMetric
-from deepeval.evaluate import DisplayConfig
 from deepeval import evaluate
 from mcp.types import CallToolResult, TextContent
 from cosine_metric import CosineSimilarityMetric
@@ -194,7 +193,7 @@ if __name__ == "__main__":
     for golden in goldens:
         query = golden["query"]
         expected_tools = golden.get("expected_tools", [])
-        expected_output = golden.get("expected_output",[])
+        expected_output = golden.get("expected_output","")
         print(f"Evaluation in progress ......... ")
         
         actual_output,tools_called,called_tool_names = run_agent(query)

@@ -10,7 +10,7 @@ import numpy as np
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from sentence_transformers import SentenceTransformer
-from config import EMBEDDING_MODEL_NAME,EMBEDDING_TRUNCATE_DIM
+from config import EMBEDDING_MODEL_NAME
 
 
 _model = None
@@ -30,11 +30,10 @@ def _get_model():
 
 class CosineSimilarityMetric(BaseMetric):
     
-    def __init__(self,threshold:float = 0.75, model_name:str ="text-embedding-3-small" ):
+    def __init__(self,threshold:float = 0.75):
         
         super().__init__() # Runs BaseMetric's own class first so that it is properly initialised.
         self.threshold = threshold
-        self.model_name = model_name
         self.score = 0.0
         self.success = False
         self.reason = ""
@@ -75,8 +74,9 @@ class CosineSimilarityMetric(BaseMetric):
          #              ||A|| × ||B||
             
            
-        similarity = np.dot(expected_vectorized,actual_vectorized) / (
-            np.linalg.norm(expected_vectorized))*np.linalg.norm(actual_vectorized)
+        similarity = np.dot(expected_vectorized, actual_vectorized) / (
+            np.linalg.norm(expected_vectorized) * np.linalg.norm(actual_vectorized)
+        )
             
         self.score = float(similarity) 
         self.success = self.score>= self.threshold 
