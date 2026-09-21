@@ -1,0 +1,199 @@
+===============================================================================================================
+                                
+                                EMPLOYEE MCP SERVER DOCUMENTATION
+
+===============================================================================================================
+
+Documentation on building custom MCP server from scratch -- Experion Employee MCP Server -- containing HR and
+Finance dept data, validating the same with MCP's Inspector(both Web and CLI), automating the tool calls with 
+Pester script, evaluating the tool selection and answer quality using DeepEval Framework, and finally calculating
+the Cosine Similarity of Actual and Expected results using Voyage AI Embeddings.
+
+
+
+STEP - 1   BUILDING SERVER FROM SCRATCH 
+---------------------------------------------
+
+Experion Employee MCP Server, is built fresh from the initial stage -- server.py, data_store.py, config.py etc, all 
+written from the ground up, using mcp.server.MCPServer as the base. The code is split into three files :-
+
+
+        • config.py  --->  Holds all the constants (HR_DEPT_FILE, FINANCE_DEPT_FILE, SERVER_NAME, MODEL_NAME etc)
+  
+
+        • data_store.py -->  Experion_DataStore class which loads and serves data from hr_dept.json/finance_dept
+                             .json files.
+                            
+
+        • server.py   --> Registers all the tools mentioned and starts the MCP Server over stdio.
+
+
+The server exposes 3 tools :-
+
+        • get_all_employees :-  returns EmpID + Employee Name of all employees, from hr_dept.json.
+
+
+        • get_employee_data :-  returns the full hr record of the specified employee using EmpID.
+
+
+        • get_salary_breakup :- returns the full financial record(CTC+Total Allowance) of the specified employee
+                                using EmpID.
+
+
+
+STEP - 2   TESTING MCP SERVER - WEB UI AND CLI 
+-----------------------------------------------
+
+Employee server is tested using MCP Inspector before evaluation and connecting it to any other application. 
+
+MCP Inspector is a standalone testing tool for MCP servers, maintained by the Model Context Protocol project 
+itself. It lets you connect to any MCP server and interact with it directly — outside of a full host application 
+like Claude Desktop — so you can verify the server works correctly before wiring it into anything else.
+
+
+    • WEB UI MODE :- Launches a local browser interface listing all the tools available in server, its internal 
+                     schema and letting you trigger each tool manually and validate the json response.
+
+
+                    "npx @modelcontextprotocol/inspector uv run server.py"
+
+
+    • CLI MODE :- Launches the same MCP Inspector from the Terminal -- one shot commands -- useful for multiple,
+                  repeated checks with different inputs.
+
+
+                  ‣ To list all tools available in server 
+                  ..........................................
+
+                    "npx @modelcontextprotocol/inspector --cli uv run server.py --method tools/list"
+
+                  
+
+                  ‣ To get all Employees
+                  ..........................
+                
+                    "npx @modelcontextprotocol/inspector --cli uv run server.py --method tools/call --tool-name get_all_employees "
+
+
+
+                  ‣ To get Employee Data
+                  ..........................
+
+                    "npx @modelcontextprotocol/inspector --cli uv run server.py --method tools/call --tool-name get_employee_data --tool-arg emp_id=384"
+
+
+
+                  ‣ To get Employee Salary Breakup
+                  .................................
+
+                    "npx @modelcontextprotocol/inspector --cli uv run server.py --method tools/call --tool-name get_salary_breakup --tool-arg emp_id=470"   
+
+
+
+
+STEP - 3   AUTOMATING TOOL CALLS USING PESTER SCRIPT
+-------------------------------------------------------
+
+
+Pester is a testing framework for PowerShell. It lets you write scripts that automatically call something 
+and check whether the result matches what you expected — instead of running commands manually and eyeballing 
+the output each time.
+
+Instead of running each "npx @modelcontextprotocol/inspector --cli ..." command by hand for every tool and
+every input, the Pester script drives Inspector CLI programmatically — calling get_all_employees,
+get_employee_data (across multiple EmpIds) and get_salary_breakup (across multiple EmpIds) in one run, and
+capturing each raw JSON response. 
+
+This gives a repeatable way to call each tool with variety of inputs without manually re-typing each one according 
+to each inputs and the produced actual output can be later used for DeepEval stage.
+
+
+        •   "Invoke-Pester -Path .\Experion_MCP.Tests.ps1"
+
+
+
+
+
+STEP - 4   AUTOMATED TOOL SELECTION AND QUALITY EVALUATION USING DEEPEVAL FRAMEWORK
+-------------------------------------------------------------------------------------
+
+With the mcp server tested via Inspector and automated the testing using Pester Script, now proceeding to evaluating 
+the responses. mcp_eval.py -- evaluates whether LLM correctly picks the right tool in the right order -- and produces
+a good response using a goldens file (mcp_goldens.json) of natural language queries along with expected answers
+and expected tool list.
+
+
+DeepEval Metrics used :-
+
+    • MCPUseMetric :-   Checks whether the LLM passed the right arguments to each tool call and whether the LLM
+                        used the results returned by the tool in writing its final answer.
+
+    
+    
+    • ToolCorrectnessMetric(Tool-Exact-Match) :-  Checks whether the LLM called exactly the tools it needed --
+                                                  nothing more, nothing less.If a query needed 
+                                                  get_employee_data and get_salary_breakup,
+                                                  but the LLM also called get_all_employees unnecessarily, 
+                                                  or skipped one of the two it actually needed, this metric 
+                                                  fails.
+
+
+    • ToolCorrectnessMetric(Tool-Ordering) :-   Checks not just which tools were called, but whether they were
+                                                in the right sequence.
+                                                For a query like "find the employee with the highest CTC, then show 
+                                                their profile," calling get_salary_breakup before get_all_employees 
+                                                (i.e. before you even know which employees exist) would fail this 
+                                                check, even if all the right tools eventually got called.
+
+
+The goldens file covers single-tool queries (e.g. "What is employee 102's CTC and total allowance?") as well
+as multi-tool, multi-step queries that chain get_all_employees, get_employee_data and get_salary_breakup
+together (e.g. finding the employee with the highest CTC and returning their full profile plus salary
+breakup).
+
+
+
+
+
+
+STEP - 5  CALCULATING COSINE SIMILARITY USING VOYAGE AI EMBEDDINGS
+---------------------------------------------------------------------
+
+A seperate check is also added beyond DeepEval Framework evaluation, wherein it measures how close is the LLM's 
+Actual answer to the Expected answer, not just whether the right tools were called and in the right order.
+
+This is achieved by embedding both the actual and expected outputs using Voyage AI Embedding model 
+("voyage-4-nano"), then computing the cosine similarity between the two vectors — catching cases where the 
+correct tools were called but the final answer's wording drifted meaningfully from the expected output.
+
+
+
+
+
+
+STEP - 6  REPORT OF EVALUATION RESULTS
+---------------------------------------
+
+report.py (export_mcp_report) turns the combined DeepEval + Voyage AI cosine-similarity results into a
+two-sheet Excel workbook (MCP_Test_Report.xlsx):
+
+    Sheet 1 - Detailed Report  : one row per golden query, with Query / Expected Output / Actual Output plus
+                                 one column per metric, each cell colour-coded green/yellow 
+                                 based on whether it cleared that metric's threshold.
+
+    Sheet 2 - Summary Report   : one row per metric with Average Score, Pass Rate and Total, plus an overall
+                                 pass/fail banner based on a flat 70% overall test pass rate.
+
+
+
+This task gave a full loop for the Experion Employee MCP server — building it from scratch, validating it
+manually with Inspector, automating those same tool calls with Pester script, evaluating tool selection and answer
+quality with DeepEval, checking semantic similarity with Voyage AI embeddings, and rolling everything up into
+a shareable Excel report.
+
+
+
+
+
+                             
+  

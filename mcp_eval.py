@@ -36,7 +36,7 @@ MAX_TURNS = 6
 
 def build_tools(mcp_server):
     """
-    Builds tool list automatically from server.py describing the 3 tools in the format OpenAi's API-
+    Builds tool list automatically from server.py describing the 3 tools in the format OpenAI's API-
     expects, so the model knows what all tools to call and with what parameters.
     
     """
